@@ -379,6 +379,78 @@
             gap: 18px;
         }
 
+        .feature-carousel {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-controls {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 16px;
+        }
+
+        .feature-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .rail-btn {
+            width: 50px;
+            height: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
+            font: inherit;
+            font-size: 22px;
+            line-height: 1;
+            cursor: pointer;
+            transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+        }
+
+        .rail-btn:hover {
+            transform: translateY(-2px);
+            background: rgba(105, 227, 192, 0.12);
+            border-color: rgba(105, 227, 192, 0.28);
+        }
+
+        .rail-btn:active {
+            transform: translateY(0);
+        }
+
+        .rail-btn:disabled {
+            opacity: 0.45;
+            cursor: default;
+            transform: none;
+            background: rgba(255, 255, 255, 0.03);
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .feature-rail {
+            display: flex;
+            gap: 18px;
+            overflow-x: auto;
+            padding: 4px 0 6px;
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+            scrollbar-width: none;
+            overscroll-behavior-x: contain;
+        }
+
+        .feature-rail::-webkit-scrollbar {
+            display: none;
+        }
+
+        .feature-rail .panel {
+            flex: 0 0 100%;
+            min-height: 272px;
+            width: 100%;
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+            padding: 30px;
+        }
+
         .panel {
             background: var(--panel);
             border: 1px solid var(--line);
@@ -516,8 +588,8 @@
                 align-items: start;
             }
 
-            .grid-3 {
-                grid-template-columns: 1fr;
+            .feature-controls {
+                justify-content: flex-start;
             }
         }
 
@@ -528,6 +600,18 @@
 
             .timeline-item {
                 grid-template-columns: 1fr;
+            }
+
+            .feature-actions {
+                width: 100%;
+            }
+
+            .rail-btn {
+                flex: 1;
+            }
+
+            .feature-rail .panel {
+                min-height: 240px;
             }
 
             .phone {
@@ -598,6 +682,7 @@
                     </div>
                 </div>
             </div>
+            </div>
         </section>
 
         <section class="block" id="features">
@@ -608,7 +693,14 @@
                 <p>不是单纯的录音工具，而是把“采集、整理、回看、复用”串成一条顺手的记录流程。</p>
             </div>
 
-            <div class="grid-3">
+            <div class="feature-carousel">
+                <div class="feature-controls">
+                    <div class="feature-actions">
+                        <button class="rail-btn" type="button" data-rail-prev="feature-rail" aria-label="上一张">&#8592;</button>
+                        <button class="rail-btn" type="button" data-rail-next="feature-rail" aria-label="下一张">&#8594;</button>
+                    </div>
+                </div>
+                <div class="grid-3 feature-rail" id="feature-rail">
                 <article class="panel">
                     <span class="number">01</span>
                     <h3>三种灵感入口</h3>
@@ -624,6 +716,7 @@
                     <h3>保留原文语境</h3>
                     <p>不只保留提炼结果，也保留语音转写原文，便于复盘、核对和后续扩写。</p>
                 </article>
+            </div>
             </div>
         </section>
 
@@ -721,5 +814,64 @@
             <div>灵感胶囊 v1.19 产品展示页</div>
         </footer>
     </main>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var rail = document.getElementById("feature-rail");
+            if (!rail) {
+                return;
+            }
+
+            var cards = rail.querySelectorAll(".panel");
+            var prevButton = document.querySelector('[data-rail-prev="feature-rail"]');
+            var nextButton = document.querySelector('[data-rail-next="feature-rail"]');
+
+            var getStep = function () {
+                if (!cards.length) {
+                    return rail.clientWidth;
+                }
+
+                var railStyles = window.getComputedStyle(rail);
+                var gap = parseFloat(railStyles.columnGap || railStyles.gap || "0");
+                return cards[0].getBoundingClientRect().width + gap;
+            };
+
+            var updateButtons = function () {
+                var maxScrollLeft = rail.scrollWidth - rail.clientWidth;
+                var tolerance = 8;
+
+                if (prevButton) {
+                    prevButton.disabled = rail.scrollLeft <= tolerance;
+                }
+
+                if (nextButton) {
+                    nextButton.disabled = rail.scrollLeft >= maxScrollLeft - tolerance;
+                }
+            };
+
+            var scrollRail = function (direction) {
+                var amount = getStep();
+                rail.scrollBy({
+                    left: direction * amount,
+                    behavior: "smooth"
+                });
+            };
+
+            if (prevButton) {
+                prevButton.addEventListener("click", function () {
+                    scrollRail(-1);
+                });
+            }
+
+            if (nextButton) {
+                nextButton.addEventListener("click", function () {
+                    scrollRail(1);
+                });
+            }
+
+            rail.addEventListener("scroll", updateButtons, { passive: true });
+            window.addEventListener("resize", updateButtons);
+            updateButtons();
+        });
+    </script>
 </body>
 </html>
